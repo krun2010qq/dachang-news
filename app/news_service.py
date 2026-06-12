@@ -1,6 +1,5 @@
-from __future__ import annotations
-
 from datetime import datetime
+from typing import List, Optional
 
 from sqlalchemy import desc, func, select
 from sqlalchemy.orm import Session
@@ -62,11 +61,11 @@ def refresh_news(db: Session) -> dict:
 def list_news(
     db: Session,
     *,
-    platform: str | None = None,
-    category: str | None = None,
-    q: str | None = None,
+    platform: Optional[str] = None,
+    category: Optional[str] = None,
+    q: Optional[str] = None,
     limit: int = 80,
-) -> list[NewsItem]:
+) -> List[NewsItem]:
     stmt = select(NewsItem).order_by(desc(NewsItem.fetched_at), desc(NewsItem.id))
     if platform:
         stmt = stmt.where(NewsItem.platform == platform)

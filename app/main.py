@@ -1,7 +1,6 @@
-from __future__ import annotations
-
 import logging
 from pathlib import Path
+from typing import Optional
 
 from fastapi import Depends, FastAPI, Query
 from fastapi.responses import FileResponse
@@ -24,16 +23,22 @@ app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
 
 @app.on_event("startup")
 def on_startup() -> None:
+    import threading
+
     Base.metadata.create_all(bind=engine)
     start_scheduler()
-    db = next(get_db())
-    try:
-        stats = get_stats(db)
-        if stats["total"] == 0:
-            logger.info("Empty database, running initial news fetch...")
-            refresh_news(db)
-    finally:
-        db.close()
+
+    def _initial_fetch() -> None:
+        db = next(get_db())
+        try:
+            stats = get_stats(db)
+            if stats["total"] == 0:
+                logger.info("Empty database, running initial news fetch...")
+                refresh_news(db)
+        finally:
+            db.close()
+
+    threading.Thread(target=_initial_fetch, daemon=True).start()
 
 
 @app.on_event("shutdown")
@@ -53,9 +58,9 @@ def health() -> dict:
 
 @app.get("/api/news")
 def api_news(
-    platform: str | None = None,
-    category: str | None = None,
-    q: str | None = None,
+    platform: Optional[str] = None,
+    category: Optional[str] = None,
+    q: Optional[str] = None,
     limit: int = Query(default=80, le=200),
     db: Session = Depends(get_db),
 ) -> dict:

@@ -1,6 +1,5 @@
-from __future__ import annotations
-
 import logging
+from typing import Optional
 
 from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.triggers.cron import CronTrigger
@@ -10,7 +9,7 @@ from app.database import SessionLocal
 from app.news_service import refresh_news
 
 logger = logging.getLogger(__name__)
-_scheduler: BackgroundScheduler | None = None
+_scheduler: Optional[BackgroundScheduler] = None
 
 
 def _run_refresh() -> None:

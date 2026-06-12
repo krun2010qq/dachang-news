@@ -1,7 +1,13 @@
+const BASE = window.location.pathname.startsWith("/dachang") ? "/dachang" : "";
+
 const state = {
   platform: "",
   query: "",
 };
+
+function apiUrl(path) {
+  return `${BASE}${path}`;
+}
 
 const platformTabs = document.getElementById("platform-tabs");
 const newsGrid = document.getElementById("news-grid");
@@ -93,7 +99,7 @@ function renderNews(items) {
 }
 
 async function loadStats() {
-  const res = await fetch("/api/stats");
+  const res = await fetch(apiUrl("/api/stats"));
   const stats = await res.json();
   renderStats(stats);
 }
@@ -102,7 +108,7 @@ async function loadNews() {
   const params = new URLSearchParams();
   if (state.platform) params.set("platform", state.platform);
   if (state.query) params.set("q", state.query);
-  const res = await fetch(`/api/news?${params.toString()}`);
+  const res = await fetch(apiUrl(`/api/news?${params.toString()}`));
   const data = await res.json();
   renderNews(data.items || []);
 }
@@ -111,8 +117,17 @@ async function refreshNews() {
   refreshBtn.disabled = true;
   refreshBtn.textContent = "刷新中...";
   try {
-    await fetch("/api/refresh", { method: "POST" });
-    await Promise.all([loadStats(), loadNews()]);
+    await fetch(apiUrl("/api/refresh"), { method: "POST" });
+    for (let i = 0; i < 12; i += 1) {
+      await new Promise((resolve) => setTimeout(resolve, 2500));
+      await loadStats();
+      await loadNews();
+      const statsRes = await fetch(apiUrl("/api/stats"));
+      const stats = await statsRes.json();
+      if (stats.total > 0 && stats.last_status === "ok") {
+        break;
+      }
+    }
   } finally {
     refreshBtn.disabled = false;
     refreshBtn.textContent = "立即刷新";
@@ -126,6 +141,18 @@ searchInput.addEventListener("input", () => {
 
 refreshBtn.addEventListener("click", refreshNews);
 
-Promise.all([loadStats(), loadNews()]).catch(() => {
-  newsGrid.innerHTML = '<div class="empty-card">加载失败，请稍后重试。</div>';
-});
+async function bootstrap() {
+  try {
+    await loadStats();
+    await loadNews();
+    const statsRes = await fetch(apiUrl("/api/stats"));
+    const stats = await statsRes.json();
+    if (!stats.total) {
+      await refreshNews();
+    }
+  } catch {
+    newsGrid.innerHTML = '<div class="empty-card">加载失败，请稍后重试。</div>';
+  }
+}
+
+bootstrap();

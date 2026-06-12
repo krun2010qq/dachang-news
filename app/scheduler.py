@@ -3,6 +3,7 @@ from typing import Optional
 
 from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.triggers.cron import CronTrigger
+from apscheduler.executors.pool import ThreadPoolExecutor
 
 from app.config import settings
 from app.database import SessionLocal
@@ -29,7 +30,10 @@ def start_scheduler() -> BackgroundScheduler:
     morning_h, morning_m = settings.scheduler_morning.split(":")
     afternoon_h, afternoon_m = settings.scheduler_afternoon.split(":")
 
-    scheduler = BackgroundScheduler(timezone=settings.timezone)
+    scheduler = BackgroundScheduler(
+        timezone=settings.timezone,
+        executors={"default": ThreadPoolExecutor(max_workers=1)},
+    )
     scheduler.add_job(
         _run_refresh,
         CronTrigger(hour=int(morning_h), minute=int(morning_m)),

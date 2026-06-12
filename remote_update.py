@@ -59,6 +59,8 @@ def main() -> None:
 set -e
 tar -xzf {remote_archive} -C {REMOTE_DIR}
 rm -f {remote_archive}
+cp {REMOTE_DIR}/deploy/dachang-news.service /etc/systemd/system/dachang-news.service
+systemctl daemon-reload
 systemctl restart dachang-news
 sleep 2
 curl -s http://127.0.0.1:8080/api/health

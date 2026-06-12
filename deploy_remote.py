@@ -92,10 +92,16 @@ cp {REMOTE_DIR}/deploy/dachang-news.service /etc/systemd/system/dachang-news.ser
 cp {REMOTE_DIR}/deploy/nginx-dachang-news.conf /etc/nginx/conf.d/dachang-news.conf
 systemctl daemon-reload
 systemctl enable dachang-news
+cp {REMOTE_DIR}/deploy/dachang-news.service /etc/systemd/system/dachang-news.service
+systemctl daemon-reload
 systemctl restart dachang-news
 nginx -t
+bash {REMOTE_DIR}/deploy/patch-nginx-path.sh
 systemctl reload nginx
-curl -s http://127.0.0.1:8080/api/health || true
+firewall-cmd --permanent --add-port=8080/tcp 2>/dev/null || true
+firewall-cmd --reload 2>/dev/null || true
+sleep 3
+curl -s --max-time 10 http://127.0.0.1:8080/api/health || true
 """
     run(client, commands.strip())
     client.close()

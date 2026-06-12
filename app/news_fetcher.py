@@ -200,21 +200,19 @@ def _fetch_gov_baoshan(client: httpx.Client, limit: int) -> list[dict[str, str]]
 
 
 def fetch_all_news() -> list[dict[str, str]]:
-    limit = settings.news_per_source
+    limit = min(settings.news_per_source, 10)
     seen: set[str] = set()
     collected: list[dict[str, str]] = []
 
-    with httpx.Client(timeout=25.0, headers=HEADERS, follow_redirects=True) as client:
+    with httpx.Client(timeout=8.0, headers=HEADERS, follow_redirects=True) as client:
         sources: list[tuple[str, Any]] = []
-        for keyword in KEYWORDS:
+        for keyword in KEYWORDS[:2]:
             sources.append(("google", lambda c, k=keyword: _fetch_google_news(c, k, limit)))
-            sources.append(("baidu", lambda c, k=keyword: _fetch_baidu_news(c, k, limit)))
             sources.append(("bing", lambda c, k=keyword: _fetch_bing_news(c, k, limit)))
-        sources.append(("gov", lambda c: _fetch_gov_baoshan(c, limit)))
 
         for index, (_, fetcher) in enumerate(sources):
             if index > 0:
-                time.sleep(0.4)
+                time.sleep(0.2)
             try:
                 batch = fetcher(client)
             except Exception:

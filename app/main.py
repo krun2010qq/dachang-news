@@ -2,13 +2,13 @@ import logging
 from pathlib import Path
 from typing import Optional
 
-from fastapi import Depends, FastAPI, Query
+from fastapi import BackgroundTasks, Depends, FastAPI, Query
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 from sqlalchemy.orm import Session
 
 from app.config import settings
-from app.database import Base, engine, get_db
+from app.database import Base, SessionLocal, engine, get_db
 from app.news_service import get_stats, list_news, refresh_news
 from app.scheduler import start_scheduler, stop_scheduler
 
@@ -23,22 +23,8 @@ app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
 
 @app.on_event("startup")
 def on_startup() -> None:
-    import threading
-
     Base.metadata.create_all(bind=engine)
     start_scheduler()
-
-    def _initial_fetch() -> None:
-        db = next(get_db())
-        try:
-            stats = get_stats(db)
-            if stats["total"] == 0:
-                logger.info("Empty database, running initial news fetch...")
-                refresh_news(db)
-        finally:
-            db.close()
-
-    threading.Thread(target=_initial_fetch, daemon=True).start()
 
 
 @app.on_event("shutdown")
@@ -88,6 +74,15 @@ def api_stats(db: Session = Depends(get_db)) -> dict:
     return get_stats(db)
 
 
+def _background_refresh() -> None:
+    db = SessionLocal()
+    try:
+        refresh_news(db)
+    finally:
+        db.close()
+
+
 @app.post("/api/refresh")
-def api_refresh(db: Session = Depends(get_db)) -> dict:
-    return refresh_news(db)
+def api_refresh(background_tasks: BackgroundTasks) -> dict:
+    background_tasks.add_task(_background_refresh)
+    return {"status": "started", "message": "新闻抓取已在后台开始"}

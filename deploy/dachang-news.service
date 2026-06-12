@@ -1,0 +1,15 @@
+[Unit]
+Description=Dachang Town News Aggregator
+After=network.target
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory=/opt/dachang-news
+EnvironmentFile=-/opt/dachang-news/.env
+ExecStart=/opt/dachang-news/.venv/bin/uvicorn app.main:app --host 127.0.0.1 --port 8081
+Restart=always
+RestartSec=3
+
+[Install]
+WantedBy=multi-user.target

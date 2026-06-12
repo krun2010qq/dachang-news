@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>大场镇新闻 · 实时汇总</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="/static/style.css" />
+  </head>
+  <body>
+    <div class="page">
+      <header class="hero">
+        <div>
+          <p class="eyebrow">上海市 · 宝山区 · 大场镇</p>
+          <h1>大场镇新闻汇总</h1>
+          <p class="subtitle">
+            聚合百度、Google、Bing、政务平台等多源资讯，每日上午 8:00 与下午 14:00 自动更新。
+          </p>
+        </div>
+        <div class="hero-meta">
+          <div id="status-pill" class="status-pill ok">系统正常</div>
+          <div id="last-updated" class="last-updated">最近更新：加载中...</div>
+          <button id="refresh-btn" class="btn-primary" type="button">立即刷新</button>
+        </div>
+      </header>
+
+      <section class="stats-grid" id="stats-grid"></section>
+
+      <section class="toolbar">
+        <div class="tabs" id="platform-tabs">
+          <button class="tab active" data-platform="">全部平台</button>
+        </div>
+        <div class="search-wrap">
+          <input id="search-input" type="search" placeholder="搜索大场镇相关新闻..." />
+        </div>
+      </section>
+
+      <section class="news-grid" id="news-grid">
+        <div class="loading-card">正在加载新闻...</div>
+      </section>
+    </div>
+    <script src="/static/app.js"></script>
+  </body>
+</html>
